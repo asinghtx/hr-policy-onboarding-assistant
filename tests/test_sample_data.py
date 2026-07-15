@@ -10,6 +10,11 @@ def test_at_least_four_samples():
     assert len(get_sample_names()) >= 4
 
 
+def test_every_category_has_a_sample():
+    covered_categories = {get_sample(name)["category"] for name in get_sample_names()}
+    assert covered_categories == set(POLICY_CATEGORIES)
+
+
 def test_each_sample_has_required_fields():
     for name in get_sample_names():
         sample = get_sample(name)

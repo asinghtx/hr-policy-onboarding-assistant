@@ -53,3 +53,31 @@ def test_parse_response_normalizes_non_list_fields():
     raw = '{"answer": "ok", "next_steps": "Talk to HR"}'
     result = parse_response(raw)
     assert result["next_steps"] == ["Talk to HR"]
+
+
+def test_parse_response_normalizes_onboarding_checklist_dict():
+    raw = (
+        '{"answer": "ok", "onboarding_checklist": '
+        '{"first_week": ["Set up laptop"], "day_30": "Meet the team"}}'
+    )
+    result = parse_response(raw)
+    checklist = result["onboarding_checklist"]
+    assert checklist["first_week"] == ["Set up laptop"]
+    assert checklist["day_30"] == ["Meet the team"]
+    assert checklist["day_60"] == []
+    assert checklist["day_90"] == []
+
+
+def test_parse_response_normalizes_legacy_list_checklist():
+    raw = '{"answer": "ok", "onboarding_checklist": ["Complete security training"]}'
+    result = parse_response(raw)
+    checklist = result["onboarding_checklist"]
+    assert checklist["first_week"] == ["Complete security training"]
+    assert checklist["day_30"] == []
+
+
+def test_parse_response_missing_checklist_defaults_to_empty_stages():
+    result = parse_response('{"answer": "ok"}')
+    checklist = result["onboarding_checklist"]
+    assert set(checklist.keys()) == {"first_week", "day_30", "day_60", "day_90"}
+    assert all(value == [] for value in checklist.values())

@@ -11,7 +11,12 @@ RESPONSE_SCHEMA = {
     "hr_escalation_required": True,
     "escalation_reason": "string",
     "draft_message": "string",
-    "onboarding_checklist": ["string"],
+    "onboarding_checklist": {
+        "first_week": ["string"],
+        "day_30": ["string"],
+        "day_60": ["string"],
+        "day_90": ["string"],
+    },
     "disclaimer": "string",
 }
 
@@ -45,13 +50,26 @@ this shape:
   "hr_escalation_required": true,
   "escalation_reason": "string",
   "draft_message": "string",
-  "onboarding_checklist": ["string"],
+  "onboarding_checklist": {
+    "first_week": ["string"],
+    "day_30": ["string"],
+    "day_60": ["string"],
+    "day_90": ["string"]
+  },
   "disclaimer": "string"
 }
 
 If a field does not apply, return an empty string or empty list for it rather \
 than omitting it. Only populate "onboarding_checklist" when the policy category \
-is Onboarding; otherwise return an empty list for it.
+is Onboarding; otherwise return empty lists for each of its four keys.
+
+When the policy category is Onboarding, "onboarding_checklist" must lay out a \
+30/60/90-day roadmap using only tasks and milestones supported by the provided \
+onboarding text: "first_week" for immediate setup tasks, "day_30" for tasks and \
+goals reasonable by the end of month one, "day_60" for month two, and "day_90" \
+for tasks and check-ins reasonable by end of month three. Do not invent \
+company-specific milestones that are not implied by the provided text or the \
+employee's role/context.
 """
 
 

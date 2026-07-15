@@ -2,16 +2,23 @@
 
 import streamlit as st
 
+from src.visuals import (
+    ONBOARDING_STAGE_LABELS,
+    render_category_badge,
+    render_escalation_pill,
+)
+
+_ONBOARDING_STAGE_LABELS = ONBOARDING_STAGE_LABELS
+_ONBOARDING_STAGES = tuple(_ONBOARDING_STAGE_LABELS.keys())
+
 
 def render_result(result: dict, category: str):
+    render_category_badge(category)
     st.success(result["answer"] or "No answer generated.")
 
-    if result["hr_escalation_required"]:
-        st.warning(
-            f"HR escalation required: {result['escalation_reason'] or 'See details below.'}"
-        )
-    else:
-        st.info("HR escalation not required for this question.")
+    render_escalation_pill(
+        result["hr_escalation_required"], result["escalation_reason"]
+    )
 
     with st.expander("Policy basis", expanded=False):
         _render_list(result["policy_basis"])
@@ -22,9 +29,12 @@ def render_result(result: dict, category: str):
     with st.expander("Documents or approvals needed", expanded=False):
         _render_list(result["documents_or_approvals_needed"])
 
-    if category == "Onboarding" and result["onboarding_checklist"]:
-        with st.expander("First-week onboarding checklist", expanded=True):
-            _render_list(result["onboarding_checklist"])
+    checklist = result["onboarding_checklist"]
+    if category == "Onboarding" and any(checklist.get(stage) for stage in _ONBOARDING_STAGES):
+        with st.expander("30/60/90-day onboarding roadmap", expanded=True):
+            for stage, label in _ONBOARDING_STAGE_LABELS.items():
+                st.markdown(f"**{label}**")
+                _render_list(checklist.get(stage, []))
 
     with st.expander("Draft message to HR / manager", expanded=False):
         st.text_area(
@@ -69,12 +79,11 @@ def to_markdown(result: dict, category: str, question: str) -> str:
         "",
     ]
 
-    if category == "Onboarding" and result["onboarding_checklist"]:
-        lines += [
-            "## Onboarding checklist",
-            _list_to_markdown(result["onboarding_checklist"]),
-            "",
-        ]
+    checklist = result["onboarding_checklist"]
+    if category == "Onboarding" and any(checklist.get(stage) for stage in _ONBOARDING_STAGES):
+        lines += ["## 30/60/90-day onboarding roadmap", ""]
+        for stage, label in _ONBOARDING_STAGE_LABELS.items():
+            lines += [f"### {label}", _list_to_markdown(checklist.get(stage, [])), ""]
 
     lines += [
         "## Draft message",
